@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ms_Shop</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <span class="logo">Ms_Shop</span>
+        </div>
+        <nav>
+            <a href="#" data-page="home" class="nav-link active">Accueil</a>
+            <a href="#" data-page="products" class="nav-link">Produits</a>
+            <a href="#" data-page="cart" class="nav-link">Panier <span id="cart-count">0</span></a>
+            <a href="#" data-page="contact" class="nav-link">Contact</a>
+            <button id="logout-btn" style="display:none;margin-left:2rem;background:#ff2222;color:#fff;border:none;border-radius:15px;padding:0.5rem 1.2rem;cursor:pointer;">Déconnexion</button>
+        </nav>
+    </header>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="auth-modal">
+        <div class="auth-box" id="auth-box-login">
+            <h2>Connexion</h2>
+            <div class="auth-error" id="auth-error-login" style="display:none;"></div>
+            <form id="login-form">
+                <label>Nom d'utilisateur:<input type="text" id="login-username" required></label>
+                <label>Mot de passe:<input type="password" id="login-password" required></label>
+                <button type="submit">Se connecter</button>
+            </form>
+            <span class="auth-switch" id="show-register">Pas de compte ? S'inscrire</span>
+        </div>
+        <div class="auth-box" id="auth-box-register" style="display:none;">
+            <h2>Inscription</h2>
+            <div class="auth-error" id="auth-error-register" style="display:none;"></div>
+            <form id="register-form">
+                <label>Nom d'utilisateur:<input type="text" id="register-username" required></label>
+                <label>Mot de passe:<input type="password" id="register-password" required></label>
+                <button type="submit">S'inscrire</button>
+            </form>
+            <span class="auth-switch" id="show-login">Déjà un compte ? Se connecter</span>
+        </div>
+    </div>
+
+    <main>
+        <section id="home-section" class="page-section">
+            <div class="hero">
+                <div class="hero-bg"></div>
+                <div class="hero-content">
+                    <h2 id="animated-title"></h2>
+                    <p>Des chaussures stylées pour tous les goûts et tous les âges.</p>
+                    <a href="#" data-page="products" class="btn nav-link">Voir les produits</a>
+                </div>
+            </div>
+        </section>
+        <section id="products-section" class="page-section" style="display:none;">
+            <h2>Nos Produits</h2>
+            <div id="admin-actions" style="text-align:center;margin-bottom:2rem;display:none;">
+                <button id="show-add-product-form" style="background:#25d366;color:#fff;border:none;border-radius:20px;padding:0.7rem 2rem;cursor:pointer;font-weight:500;">
+                    Ajouter un produit
+                </button>
+            </div>
+            <form id="add-product-form" style="display:none;">
+                <h3>Ajouter un produit</h3>
+                <div class="form-row">
+                    <label>Nom du produit:</label>
+                    <input type="text" id="product-name" required>
+                </div>
+                <div class="form-row">
+                    <label>Prix avant réduction ($):</label>
+                    <input type="number" id="product-old-price" required min="0" step="0.01">
+                </div>
+                <div class="form-row">
+                    <label>Prix ($):</label>
+                    <input type="number" id="product-price" required min="0" step="0.01">
+                </div>
+                <div class="form-row">
+                    <label>Stock:</label>
+                    <input type="number" id="product-stock" required min="0" step="1">
+                </div>
+                <div class="form-row">
+                    <label>Couleur:</label>
+                    <input type="text" id="product-color" required>
+                </div>
+                <div class="form-row">
+                    <label>Numéro:</label>
+                    <input type="text" id="product-number" required>
+                </div>
+                <div class="form-row">
+                    <label>Image (fichier):</label>
+                    <input type="file" id="product-img" accept="image/*" required>
+                </div>
+                <button type="submit">Ajouter</button>
+            </form>
+            <div class="products" id="products-list"></div>
+        </section>
+        <section id="cart-section" class="page-section" style="display:none;">
+            <h2>Votre Panier</h2>
+            <div id="cart-items"></div>
+            <div id="cart-total"></div>
+            <button id="checkout-btn" style="display:none;">Commander</button>
+            <form id="order-form" style="display:none;">
+                <h3>Finaliser la commande</h3>
+                <label>Nom: <input type="text" name="name" required></label>
+                <label>Email: <input type="email" name="email" required></label>
+                <label>Adresse: <input type="text" name="address" required></label>
+                <button type="button" id="whatsapp-order-btn">
+                    Envoyer la commande sur WhatsApp
+                </button>
+            </form>
+            <div id="order-success" style="display:none;color:green;margin-top:1rem;">Commande validée ! Merci.</div>
+        </section>
+        <section id="contact-section" class="page-section" style="display:none;">
+            <div class="contact-container">
+                <h2>Contactez-nous</h2>
+                <form id="contact-form">
+                    <label>Nom:<input type="text" name="name" required></label>
+                    <label>Email:<input type="email" name="email" required></label>
+                    <label>Message:<textarea name="message" rows="4" required></textarea></label>
+                    <button type="submit">Envoyer</button>
+                </form>
+                <div class="contact-whatsapp">
+                    <p>Ou contactez-nous directement sur WhatsApp :</p>
+                    <a href="https://wa.me/243974586076" target="_blank" class="whatsapp-btn">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:24px;vertical-align:middle;margin-right:8px;">
+                        +243 974 586 076
+                    </a>
+                </div>
+                <div class="contact-map" style="margin-top:2rem;">
+                    <h3 style="color:#25d366;">Notre adresse</h3>
+                    <p style="font-weight:bold;">Beni, Bungulu, cité belge, Kitsanga</p>
+                    <iframe
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=29.473%2C0.492%2C29.477%2C0.496&amp;layer=mapnik"
+                        style="width:100%;height:250px;border-radius:12px;border:1px solid #ccc;"
+                        allowfullscreen
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+                <div id="contact-success" style="display:none;color:green;margin-top:1rem;">Message envoyé !</div>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Ms_Shop. Tous droits réservés.</p>
+    </footer>
+    <script src="scripts/main.js"></script>
+    <script>
+        function renderProducts(products, role) {
+            const container = document.getElementById('products-list');
+            container.innerHTML = '';
+            products.forEach((prod, idx) => {
+                const available = prod.stock > 0;
+                const status = available ? '' : 'Rupture de stock';
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+    <div class="card-header" style="width:100%;display:flex;justify-content:flex-start;align-items:center;margin-bottom:12px;">
+        <span class="product-status ${available ? 'available' : 'unavailable'}">${available ? 'Disponible' : 'Non disponible'}</span>
+    </div>
+    <img src="${prod.img}" alt="${prod.name}">
+    <h3>${prod.name}</h3>
+    <span class="old-price">${prod.oldPrice ? prod.oldPrice.toFixed(2) + ' $' : ''}</span>
+    <span class="price">${prod.price.toFixed(2)} $</span>
+    <div style="margin:0.5rem 0;">
+        <span style="font-size:0.98rem;color:#555;">Stock: ${prod.stock}</span><br>
+        <span style="font-size:0.98rem;color:#555;">Couleur: ${prod.color}</span><br>
+        <span style="font-size:0.98rem;color:#555;">Numéro: ${prod.number}</span>
+    </div>
+    <button class="add-cart" ${!available ? 'disabled style="background:#ccc;color:#fff;cursor:not-allowed;"' : ''}>Ajouter au panier</button>
+    ${role === 'admin' ? `<button class="delete-product" data-idx="${idx}" style="background:#ff2222;color:#fff;margin-top:8px;border:none;border-radius:15px;padding:0.3rem 1rem;cursor:pointer;">Supprimer</button>` : ''}
+
+`;
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
