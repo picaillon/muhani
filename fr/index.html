@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Haojue Stock Pro</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">H</div>
+          <div>
+            <strong>Haojue Stock Pro</strong>
+            <span>Gestion professionnelle</span>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Navigation principale">
+          <button class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>Tableau</span></button>
+          <button class="nav-item" data-view="sales"><i data-lucide="shopping-cart"></i><span>Ventes</span></button>
+          <button class="nav-item" data-view="purchases"><i data-lucide="truck"></i><span>Achats</span></button>
+          <button class="nav-item" data-view="parts"><i data-lucide="package-search"></i><span>Pièces</span></button>
+          <button class="nav-item" data-view="cash"><i data-lucide="wallet"></i><span>Caisse</span></button>
+          <button class="nav-item" data-view="reports"><i data-lucide="bar-chart-3"></i><span>Rapports</span></button>
+        </nav>
+
+        <div class="session-panel">
+          <span>Session</span>
+          <strong>Administrateur</strong>
+          <small>Compte local de démonstration</small>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h1 id="viewTitle">Tableau de bord</h1>
+            <p id="viewSubtitle">Vue rapide des ventes, du stock, de la caisse et des alertes.</p>
+          </div>
+          <div class="top-actions">
+            <label class="search-box">
+              <i data-lucide="search"></i>
+              <input id="globalSearch" type="search" placeholder="Rechercher pièce, facture, fournisseur..." />
+            </label>
+            <button class="icon-button" id="exportData" title="Exporter la sauvegarde JSON"><i data-lucide="database-backup"></i></button>
+            <button class="icon-button danger" id="resetDatabase" title="Réinitialiser la base locale"><i data-lucide="rotate-ccw"></i></button>
+          </div>
+        </header>
+
+        <section id="dashboard" class="view active">
+          <div class="kpi-grid" id="kpiGrid"></div>
+          <div class="dashboard-grid">
+            <section class="panel span-2">
+              <div class="panel-head">
+                <h2>Stock à surveiller</h2>
+                <button class="text-button" data-view-link="parts">Voir les pièces</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Code</th><th>Pièce</th><th>Stock</th><th>Seuil</th><th>Statut</th></tr></thead>
+                  <tbody id="lowStockRows"></tbody>
+                </table>
+              </div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><h2>Top ventes</h2></div>
+              <div id="topParts" class="rank-list"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><h2>Derniers mouvements</h2></div>
+              <div id="movementFeed" class="feed"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="sales" class="view">
+          <div class="workspace">
+            <form id="saleForm" class="panel form-panel">
+              <div class="panel-head"><h2>Nouvelle vente</h2><span class="badge" id="saleNumber"></span></div>
+              <div class="form-grid">
+                <label>Client<input name="client" placeholder="Client comptant" /></label>
+                <label>Téléphone<input name="phone" placeholder="+243..." /></label>
+                <label>Modèle moto<select name="model" id="saleModel"></select></label>
+                <label>Mode paiement<select name="paymentMode" id="salePaymentMode"></select></label>
+                <label>Pièce compatible<select name="part" id="salePart"></select></label>
+                <label>Quantité<input name="qty" type="number" min="1" value="1" /></label>
+                <label>Remise<input name="discount" type="number" min="0" value="0" /></label>
+                <label>Montant payé<input name="paid" type="number" min="0" value="0" /></label>
+              </div>
+              <div class="summary-line"><span>Total estimé</span><strong id="saleTotal">$0.00</strong></div>
+              <textarea name="note" placeholder="Observation"></textarea>
+              <button class="primary-button" type="submit"><i data-lucide="check"></i>Valider la vente</button>
+            </form>
+            <section class="panel span-2">
+              <div class="panel-head">
+                <h2>Factures récentes</h2>
+                <button class="icon-button" id="printLastSale" title="Imprimer le dernier reçu"><i data-lucide="printer"></i></button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Facture</th><th>Client</th><th>Total</th><th>Payé</th><th>Solde</th></tr></thead>
+                  <tbody id="salesRows"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="purchases" class="view">
+          <div class="workspace">
+            <form id="purchaseForm" class="panel form-panel">
+              <div class="panel-head"><h2>Nouvel achat</h2><span class="badge" id="purchaseNumber"></span></div>
+              <div class="form-grid">
+                <label>Fournisseur<input name="supplier" required placeholder="Nom du fournisseur" /></label>
+                <label>Réf. facture<input name="supplierRef" placeholder="FAC-..." /></label>
+                <label>Pièce<select name="part" id="purchasePart"></select></label>
+                <label>Quantité<input name="qty" type="number" min="1" value="1" /></label>
+                <label>Prix achat<input name="cost" type="number" min="0" value="0" /></label>
+                <label>Montant payé<input name="paid" type="number" min="0" value="0" /></label>
+                <label>Mode paiement<select name="paymentMode" id="purchasePaymentMode"></select></label>
+                <label>Remise<input name="discount" type="number" min="0" value="0" /></label>
+              </div>
+              <div class="summary-line"><span>Total achat</span><strong id="purchaseTotal">$0.00</strong></div>
+              <textarea name="note" placeholder="Observation"></textarea>
+              <button class="primary-button" type="submit"><i data-lucide="check"></i>Valider l'achat</button>
+            </form>
+            <section class="panel span-2">
+              <div class="panel-head"><h2>Achats récents</h2></div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Bon</th><th>Fournisseur</th><th>Pièce</th><th>Total</th><th>Solde</th></tr></thead>
+                  <tbody id="purchaseRows"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="parts" class="view">
+          <div class="workspace">
+            <form id="partForm" class="panel form-panel">
+              <div class="panel-head">
+                <h2>Fiche pièce</h2>
+                <button type="button" class="icon-button" id="resetPartForm" title="Nouvelle pièce"><i data-lucide="plus"></i></button>
+              </div>
+              <input type="hidden" name="id" />
+              <div class="form-grid">
+                <label>Code<input name="code" readonly placeholder="Automatique" /></label>
+                <label>Désignation<input name="name" required placeholder="Bougie Haojue" /></label>
+                <label>Catégorie<select name="category" id="partCategory"></select></label>
+                <label>Référence<input name="reference" readonly placeholder="Automatique" /></label>
+                <label>Prix achat<input name="cost" type="number" min="0" value="0" /></label>
+                <label>Prix vente<input name="price" type="number" min="0" value="0" /></label>
+                <label>Stock<input name="stock" type="number" min="0" value="0" /></label>
+                <label>Seuil alerte<input name="minStock" type="number" min="0" value="1" /></label>
+                <label>Unité<input name="unit" placeholder="pièce, paire..." /></label>
+                <label>Emplacement<input name="location" placeholder="Rayon A" /></label>
+              </div>
+              <label class="wide-label">Compatibilité modèles<select name="models" id="partModels" multiple></select></label>
+              <textarea name="description" placeholder="Description ou remarque"></textarea>
+              <button class="primary-button" type="submit"><i data-lucide="save"></i>Enregistrer la pièce</button>
+            </form>
+
+            <section class="panel span-2">
+              <div class="panel-head">
+                <h2>Catalogue pièces</h2>
+                <div class="panel-actions">
+                  <select id="modelFilter" class="compact-select"></select>
+                  <button class="secondary-button" id="downloadPartsTemplate" type="button"><i data-lucide="file-spreadsheet"></i>Modèle Excel</button>
+                  <button class="secondary-button" id="exportPartsExcel" type="button"><i data-lucide="download"></i>Exporter Excel</button>
+                  <label class="file-button"><i data-lucide="upload"></i>Importer Excel<input id="importPartsExcel" type="file" accept=".xlsx,.xls,.csv" /></label>
+                </div>
+              </div>
+              <div class="notice">
+                Colonnes acceptées : Code, Désignation, Catégorie, Référence, Prix achat, Prix vente, Stock, Seuil alerte, Unité, Emplacement, Modèles compatibles, Description.
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Code</th><th>Désignation</th><th>Compatibilité</th><th>Stock</th><th>Prix</th><th>Actions</th></tr></thead>
+                  <tbody id="partsRows"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="cash" class="view">
+          <div class="workspace">
+            <form id="cashForm" class="panel form-panel">
+              <div class="panel-head"><h2>Mouvement caisse</h2></div>
+              <div class="form-grid">
+                <label>Type<select name="type"><option value="in">Entrée</option><option value="out">Sortie</option></select></label>
+                <label>Catégorie<select name="category" id="cashCategory"></select></label>
+                <label>Montant<input name="amount" type="number" min="0" required /></label>
+                <label>Mode paiement<select name="paymentMode" id="cashPaymentMode"></select></label>
+              </div>
+              <textarea name="note" placeholder="Motif ou observation"></textarea>
+              <button class="primary-button" type="submit"><i data-lucide="plus"></i>Ajouter</button>
+            </form>
+            <section class="panel">
+              <div class="panel-head"><h2>Solde de caisse</h2></div>
+              <div class="cash-balance"><span>Solde théorique</span><strong id="cashBalance">$0.00</strong></div>
+              <div id="cashBreakdown" class="mini-stats"></div>
+            </section>
+            <section class="panel span-2">
+              <div class="panel-head"><h2>Historique caisse</h2></div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Date</th><th>Type</th><th>Catégorie</th><th>Mode</th><th>Montant</th></tr></thead>
+                  <tbody id="cashRows"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="reports" class="view">
+          <div class="report-toolbar">
+            <label>Période<select id="reportPeriod"><option value="day">Aujourd'hui</option><option value="month">Ce mois</option><option value="year">Cette année</option><option value="all">Tout</option></select></label>
+            <button class="secondary-button" id="printReport"><i data-lucide="printer"></i>Imprimer</button>
+          </div>
+          <div class="report-grid" id="reportGrid"></div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
